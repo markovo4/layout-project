@@ -2,37 +2,6 @@ const {
   parallel, src, dest, watch, series,
 } = require('gulp');
 
-const sass = require('gulp-sass')(require('sass'));
-const pug = require('gulp-pug');
-const browserSync = require('browser-sync').create();
-
-const buildSass = () => {
-  console.log('Компиляция SASS');
-
-  return src('dist/scss/*.scss')
-    .pipe(sass())
-    .pipe(dest('build/styles/'))
-    .pipe(browserSync.stream());
-};
-
-const buildPug = () => {
-  console.log('Компиляция Pug');
-
-  return src('dist/pages/*.pug')
-    .pipe(pug())
-    .pipe(dest('build/'))
-    .pipe(browserSync.stream());
-};
-
-const browserSyncJob = () => {
-  browserSync.init({
-    server: 'build/',
-  });
-
-  watch('dist/sass/*.scss', buildSass);
-  watch('dist/pages/*.pug', buildPug);
-};
-
 const firstTask = (done) => {
   console.log('My First Hexlet Task');
 
@@ -70,29 +39,3 @@ const copyScss = () => src(['dist/**/*.scss', '!dist/project/**'])
 // After the search <<src()>> using Globs <<['dist/**/*.scss', '!dist/project/**']>> files will be copied and placed
 // using <<dest()>> into <<'build/styles'>>.
 exports.copyScssFiles = copyScss;
-
-//
-const changeAppStylesFile = (done) => {
-  console.log('Ой, файл index.scss изменился');
-
-  done();
-};
-
-const checkFileStructure = (done) => {
-  console.log('Изменилась структура файлов');
-
-  done();
-};
-
-const watchers = () => {
-  // Отслеживание только события `change`
-  watch('dist/scss/index.scss', { events: 'change' }, changeAppStylesFile);
-
-  // Отслеживание удаления и добавления файлов в директории
-  watch('dist/scss/', { events: ['add', 'unlink'] }, checkFileStructure);
-};
-//
-
-exports.watchers = watchers;
-exports.build = parallel(buildSass, buildPug);
-exports.server = browserSyncJob;
