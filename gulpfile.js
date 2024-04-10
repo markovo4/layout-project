@@ -3,35 +3,8 @@ const {
 } = require('gulp');
 
 const sass = require('gulp-sass')(require('sass'));
-const pug = require('gulp-pug');
+const pug = require('gulp-pug')(require('pug'));
 const browserSync = require('browser-sync').create();
-
-const buildSass = () => {
-  console.log('Компиляция SASS');
-
-  return src('dist/scss/*.scss')
-    .pipe(sass())
-    .pipe(dest('build/styles/'))
-    .pipe(browserSync.stream());
-};
-
-const buildPug = () => {
-  console.log('Компиляция Pug');
-
-  return src('dist/pages/*.pug')
-    .pipe(pug())
-    .pipe(dest('build/'))
-    .pipe(browserSync.stream());
-};
-
-const browserSyncJob = () => {
-  browserSync.init({
-    server: 'build/',
-  });
-
-  watch('dist/sass/*.scss', buildSass);
-  watch('dist/pages/*.pug', buildPug);
-};
 
 const firstTask = (done) => {
   console.log('My First Hexlet Task');
@@ -71,28 +44,64 @@ const copyScss = () => src(['dist/**/*.scss', '!dist/project/**'])
 // using <<dest()>> into <<'build/styles'>>.
 exports.copyScssFiles = copyScss;
 
-//
-const changeAppStylesFile = (done) => {
-  console.log('Ой, файл index.scss изменился');
+const changeFileContent = (done) => {
+  console.log('File content has changed');
 
   done();
 };
 
-const checkFileStructure = (done) => {
-  console.log('Изменилась структура файлов');
+const changeFileStructure = (done) => {
+  console.log('File structure has changed');
 
   done();
 };
 
 const watchers = () => {
-  // Отслеживание только события `change`
-  watch('dist/scss/index.scss', { events: 'change' }, changeAppStylesFile);
+  // Watcher that will call the call-back function on change of the file content
+  watch('dist/scss/index.scss', { events: 'change' }, changeFileContent);
 
-  // Отслеживание удаления и добавления файлов в директории
-  watch('dist/scss/', { events: ['add', 'unlink'] }, checkFileStructure);
+  // Watcher that will call the call-back function on change of the file structure
+  watch('dist/scss/', { events: ['add', 'unlink'] }, changeFileStructure);
 };
-//
 
+const buildSass = () => {
+  console.log('SASS Compilation');
+
+  return src('dist/scss/*.scss')
+    .pipe(sass())
+    .pipe(dest('build/styles/'))
+    .pipe(browserSync.stream());
+};
+
+const buildPug = () => {
+  console.log('Pug Compilation');
+
+  return src('dist/pages/*.pug')
+    .pipe(pug())
+    .pipe(dest('build/html/'))
+    .pipe(browserSync.stream());
+};
+
+const browserSyncJob = () => {
+  browserSync.init({
+    server: 'build/',
+  });
+
+  watch('dist/sass/*.scss', buildSass);
+  watch('dist/pages/*.pug', buildPug);
+};
+
+const development = (done) => {
+  console.log('Development Started');
+
+  series(
+    parallel(buildSass, buildPug),
+    browserSyncJob,
+  );
+  console.log('Development Finished');
+
+  done();
+};
+
+exports.build = development;
 exports.watchers = watchers;
-exports.build = parallel(buildSass, buildPug);
-exports.server = browserSyncJob;
